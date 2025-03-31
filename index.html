@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画マニュアル作成アプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">動画マニュアル作成アプリ</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-projects">プロジェクト</a>
+                    </li>
+                    <li class="nav-item admin-only" style="display: none;">
+                        <a class="nav-link" href="#" id="nav-departments">部署管理</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown" id="user-menu" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" id="user-dropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i> <span id="username"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="user-dropdown">
+                            <li><a class="dropdown-item" href="#" id="btn-logout">ログアウト</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="container mt-4">
+        <!-- ログイン画面 -->
+        <div id="login-container" class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="auth-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="login-tab" data-bs-toggle="tab"
+                                    data-bs-target="#login-panel" type="button" role="tab" aria-controls="login-panel"
+                                    aria-selected="true">ログイン</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="register-tab" data-bs-toggle="tab"
+                                    data-bs-target="#register-panel" type="button" role="tab"
+                                    aria-controls="register-panel" aria-selected="false">新規登録</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="auth-tab-content">
+                            <!-- ログインフォーム -->
+                            <div class="tab-pane fade show active" id="login-panel" role="tabpanel"
+                                aria-labelledby="login-tab">
+                                <form id="login-form">
+                                    <div class="mb-3">
+                                        <label for="login-username" class="form-label">ユーザー名</label>
+                                        <input type="text" class="form-control" id="login-username" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="login-password" class="form-label">パスワード</label>
+                                        <input type="password" class="form-control" id="login-password" required>
+                                    </div>
+                                    <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+                                    <button type="submit" class="btn btn-primary">ログイン</button>
+                                </form>
+                            </div>
+                            <!-- 新規登録フォーム -->
+                            <div class="tab-pane fade" id="register-panel" role="tabpanel"
+                                aria-labelledby="register-tab">
+                                <form id="register-form">
+                                    <div class="mb-3">
+                                        <label for="register-username" class="form-label">ユーザー名</label>
+                                        <input type="text" class="form-control" id="register-username" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-email" class="form-label">メールアドレス</label>
+                                        <input type="email" class="form-control" id="register-email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-fullname" class="form-label">氏名</label>
+                                        <input type="text" class="form-control" id="register-fullname">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-password" class="form-label">パスワード</label>
+                                        <input type="password" class="form-control" id="register-password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register-password-confirm" class="form-label">パスワード（確認）</label>
+                                        <input type="password" class="form-control" id="register-password-confirm"
+                                            required>
+                                    </div>
+                                    <div id="register-error" class="alert alert-danger" style="display: none;"></div>
+                                    <button type="submit" class="btn btn-primary">登録</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- プロジェクト一覧（フィルター機能付き） -->
+        <div id="projects-container" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>プロジェクト一覧</h1>
+                <button class="btn btn-primary" id="btn-new-project">
+                    <i class="fas fa-plus"></i> 新規プロジェクト
+                </button>
+            </div>
+
+            <!-- フィルターセクション -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>フィルター</span>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-filters">クリア</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filter-department" class="form-label">部署</label>
+                            <select class="form-select" id="filter-department">
+                                <option value="">すべての部署</option>
+                                <!-- 部署リストが動的に追加されます -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filter-task" class="form-label">作業内容</label>
+                            <input type="text" class="form-control" id="filter-task" placeholder="作業内容で検索">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filter-title" class="form-label">プロジェクト名</label>
+                            <input type="text" class="form-control" id="filter-title" placeholder="プロジェクト名で検索">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- プロジェクト件数表示 -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span id="projects-count-badge" class="badge bg-primary me-2">0</span>
+                    <span>件のプロジェクト</span>
+                </div>
+            </div>
+
+            <div class="row" id="projects-list">
+                <!-- プロジェクトカードがここに動的に追加されます -->
+            </div>
+
+            <!-- プロジェクトが見つからない場合のメッセージ -->
+            <div id="no-projects-message" class="text-center py-5" style="display: none;">
+                <div class="alert alert-info">
+                    該当するプロジェクトがありません。フィルター条件を変更してください。
+                </div>
+            </div>
+        </div>
+
+        <!-- 部署管理画面 -->
+        <div id="departments-container" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>部署管理</h1>
+                <button class="btn btn-primary" id="btn-new-department">
+                    <i class="fas fa-plus"></i> 新規部署
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">部署一覧</div>
+                        <div class="card-body">
+                            <ul class="list-group" id="departments-list">
+                                <!-- 部署リストがここに動的に追加されます -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">作業タイプ</div>
+                        <div class="card-body">
+                            <div id="no-department-selected" class="text-center py-3">
+                                左側から部署を選択してください
+                            </div>
+                            <div id="tasks-container" style="display: none;">
+                                <button class="btn btn-sm btn-primary mb-3" id="btn-new-task">
+                                    <i class="fas fa-plus"></i> 新規作業タイプ
+                                </button>
+                                <ul class="list-group" id="tasks-list">
+                                    <!-- 作業タイプリストがここに動的に追加されます -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- プロジェクト編集/作成画面 -->
+        <div id="project-editor-container" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 id="project-editor-title">新規プロジェクト</h1>
+                <button class="btn btn-secondary" id="btn-back-to-projects">
+                    <i class="fas fa-arrow-left"></i> 戻る
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <!-- プロジェクト情報フォーム -->
+                    <div class="card mb-4">
+                        <div class="card-header">プロジェクト情報</div>
+                        <div class="card-body">
+                            <form id="project-form">
+                                <div class="mb-3">
+                                    <label for="project-title" class="form-label">タイトル</label>
+                                    <input type="text" class="form-control" id="project-title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="project-department" class="form-label">部署</label>
+                                    <select class="form-select" id="project-department">
+                                        <option value="">選択してください</option>
+                                        <!-- 部署リストがここに動的に追加されます -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="project-task" class="form-label">作業タイプ</label>
+                                    <select class="form-select" id="project-task">
+                                        <option value="">選択してください</option>
+                                        <!-- 作業タイプリストがここに動的に追加されます -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="project-description" class="form-label">説明</label>
+                                    <textarea class="form-control" id="project-description" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="project-status" class="form-label">状態</label>
+                                    <select class="form-select" id="project-status">
+                                        <option value="draft">下書き</option>
+                                        <option value="published">公開</option>
+                                        <option value="archived">アーカイブ</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="btn-save-project">保存</button>
+                                <button type="button" class="btn btn-danger" id="btn-delete-project"
+                                    style="display: none;">削除</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- メディアアップロードフォーム -->
+                    <div class="card mb-4" id="media-upload-card" style="display: none;">
+                        <div class="card-header">メディアアップロード</div>
+                        <div class="card-body">
+                            <form id="media-upload-form">
+                                <div class="mb-3">
+                                    <label for="media-file" class="form-label">ファイル選択</label>
+                                    <input class="form-control" type="file" id="media-file"
+                                        accept="video/mp4,video/webm,video/ogg,image/jpeg,image/png,image/gif,image/svg+xml">
+                                </div>
+                                <button type="submit" class="btn btn-primary">アップロード</button>
+                            </form>
+                            <div id="upload-progress" class="progress mt-3" style="display: none;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <!-- エディター部分（既存プロジェクトのみ表示） -->
+                    <div id="editor-container" style="display: none;">
+                        <!-- プレビュー -->
+                        <div class="card mb-4">
+                            <div class="card-header">プレビュー</div>
+                            <div class="card-body">
+                                <div id="preview-container" class="position-relative">
+                                    <div id="video-container" class="ratio ratio-16x9">
+                                        <video id="preview-video" controls></video>
+                                    </div>
+                                    <div id="image-container" class="text-center mb-3" style="display: none;">
+                                        <img id="preview-image" class="img-fluid" alt="プレビュー画像">
+                                    </div>
+                                    <div id="elements-container" class="position-absolute top-0 start-0 w-100 h-100">
+                                        <!-- 要素（テキスト、図形など）がここに動的に追加されます -->
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-center mt-3">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-play">
+                                            <i class="fas fa-play"></i> 再生
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-pause">
+                                            <i class="fas fa-pause"></i> 一時停止
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-stop">
+                                            <i class="fas fa-stop"></i> 停止
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- タイムライン -->
+                        <div class="card mb-4">
+                            <div class="card-header">タイムライン</div>
+                            <div class="card-body">
+                                <div id="timeline-container" class="overflow-auto">
+                                    <div id="timeline-ruler" class="d-flex border-bottom mb-2"></div>
+                                    <div id="timeline-tracks">
+                                        <!-- タイムライントラックがここに動的に追加されます -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 編集ツール -->
+                        <div class="card mb-4">
+                            <div class="card-header">編集ツール</div>
+                            <div class="card-body">
+                                <div class="btn-toolbar" role="toolbar">
+                                    <div class="btn-group me-2" role="group">
+                                        <button type="button" class="btn btn-outline-primary" id="btn-add-text">
+                                            <i class="fas fa-font"></i> テキスト
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-add-rectangle">
+                                            <i class="fas fa-square"></i> 四角形
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-add-circle">
+                                            <i class="fas fa-circle"></i> 円
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" id="btn-add-arrow">
+                                            <i class="fas fa-long-arrow-alt-right"></i> 矢印
+                                        </button>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-danger" id="btn-delete-element"
+                                            disabled>
+                                            <i class="fas fa-trash"></i> 削除
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 要素プロパティパネル -->
+                                <div id="element-properties" class="mt-3" style="display: none;">
+                                    <h5>要素のプロパティ</h5>
+                                    <form id="element-properties-form">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <label for="element-content" class="form-label">テキスト</label>
+                                                    <input type="text" class="form-control" id="element-content">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-color" class="form-label">色</label>
+                                                    <input type="color" class="form-control" id="element-color">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-background" class="form-label">背景色</label>
+                                                    <input type="color" class="form-control" id="element-background">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-font-size" class="form-label">フォントサイズ</label>
+                                                    <input type="number" class="form-control" id="element-font-size"
+                                                        min="8" max="72">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-2">
+                                                    <label for="element-width" class="form-label">幅</label>
+                                                    <input type="number" class="form-control" id="element-width"
+                                                        min="1">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-height" class="form-label">高さ</label>
+                                                    <input type="number" class="form-control" id="element-height"
+                                                        min="1">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-start-time" class="form-label">開始時間 (秒)</label>
+                                                    <input type="number" class="form-control" id="element-start-time"
+                                                        min="0" step="0.1">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="element-end-time" class="form-label">終了時間 (秒)</label>
+                                                    <input type="number" class="form-control" id="element-end-time"
+                                                        min="0" step="0.1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">適用</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- メディア一覧 -->
+                        <div class="card mb-4">
+                            <div class="card-header">メディア一覧</div>
+                            <div class="card-body">
+                                <div id="media-list" class="row row-cols-2 row-cols-md-4 g-2">
+                                    <!-- メディアサムネイルがここに動的に追加されます -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル -->
+    <!-- 部署作成/編集モーダル -->
+    <div class="modal fade" id="department-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="department-modal-title">新規部署</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="department-form">
+                        <div class="mb-3">
+                            <label for="department-name" class="form-label">部署名</label>
+                            <input type="text" class="form-control" id="department-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="department-description" class="form-label">説明</label>
+                            <textarea class="form-control" id="department-description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-department">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 作業タイプ作成/編集モーダル -->
+    <div class="modal fade" id="task-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="task-modal-title">新規作業タイプ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="task-form">
+                        <div class="mb-3">
+                            <label for="task-name" class="form-label">作業タイプ名</label>
+                            <input type="text" class="form-control" id="task-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task-description" class="form-label">説明</label>
+                            <textarea class="form-control" id="task-description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-task">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認モーダル -->
+    <div class="modal fade" id="confirm-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirm-modal-title">確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirm-modal-body">
+                    本当に削除しますか？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm">削除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript ライブラリとアプリケーションスクリプト -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.17/dist/interact.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/projects.js"></script>
+    <script src="js/departments.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

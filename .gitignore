@@ -1,0 +1,5 @@
+._*
+.htaccess
+api/config.php
+/logs/
+/uploads/

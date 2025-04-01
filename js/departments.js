@@ -392,6 +392,7 @@ const Departments = (function () {
             document.getElementById('projects-container').style.display = 'none';
             document.getElementById('departments-container').style.display = 'block';
             document.getElementById('project-editor-container').style.display = 'none';
+            document.getElementById('users-container').style.display = 'none';
             loadDepartments();
         });
 

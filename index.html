@@ -458,6 +458,148 @@
         </div>
     </div>
 
+    <!-- ユーザー管理画面 -->
+    <div id="users-container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>ユーザー管理</h1>
+            <button class="btn btn-primary" id="btn-new-user">
+                <i class="fas fa-user-plus"></i> 新規ユーザー
+            </button>
+        </div>
+    
+        <!-- フィルター -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>検索・フィルター</span>
+                    <button class="btn btn-sm btn-outline-secondary" id="btn-clear-user-filters">クリア</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="filter-username" class="form-label">ユーザー名</label>
+                        <input type="text" class="form-control" id="filter-username" placeholder="ユーザー名で検索">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filter-user-role" class="form-label">権限</label>
+                        <select class="form-select" id="filter-user-role">
+                            <option value="">すべての権限</option>
+                            <option value="admin">管理者</option>
+                            <option value="editor">編集者</option>
+                            <option value="viewer">閲覧者</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="filter-user-department" class="form-label">部署</label>
+                        <select class="form-select" id="filter-user-department">
+                            <option value="">すべての部署</option>
+                            <!-- 部署リストが動的に追加されます -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- ユーザー一覧テーブル -->
+        <div class="card">
+            <div class="card-header">ユーザー一覧</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ユーザー名</th>
+                                <th>メールアドレス</th>
+                                <th>氏名</th>
+                                <th>部署</th>
+                                <th>権限</th>
+                                <th>作成日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <!-- ユーザーリストが動的に追加されます -->
+                        </tbody>
+                    </table>
+                </div>
+    
+                <!-- ユーザーが見つからない場合のメッセージ -->
+                <div id="no-users-message" class="alert alert-info text-center" style="display: none;">
+                    該当するユーザーが見つかりません。
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ユーザー作成/編集モーダル -->
+    <div class="modal fade" id="user-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="user-modal-title">新規ユーザー</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="user-form">
+                        <div class="mb-3">
+                            <label for="user-username" class="form-label">ユーザー名</label>
+                            <input type="text" class="form-control" id="user-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-email" class="form-label">メールアドレス</label>
+                            <input type="email" class="form-control" id="user-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-fullname" class="form-label">氏名</label>
+                            <input type="text" class="form-control" id="user-fullname">
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-department" class="form-label">部署</label>
+                            <select class="form-select" id="user-department">
+                                <option value="">選択してください</option>
+                                <!-- 部署リストが動的に追加されます -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-role" class="form-label">権限</label>
+                            <select class="form-select" id="user-role" required>
+                                <option value="viewer">閲覧者</option>
+                                <option value="editor">編集者</option>
+                                <option value="admin">管理者</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="password-field">
+                            <label for="user-password" class="form-label">パスワード</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="user-password">
+                                <button class="btn btn-outline-secondary" type="button" id="btn-generate-password">
+                                    自動生成
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="btn-toggle-password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">新規ユーザーの場合、空欄にすると自動生成されます。</div>
+                        </div>
+                    </form>
+    
+                    <!-- 自動生成パスワード表示エリア -->
+                    <div id="generated-password-area" class="alert alert-success mt-3" style="display: none;">
+                        <h5>自動生成されたパスワード:</h5>
+                        <p id="generated-password-text" class="mb-0 user-select-all font-monospace"></p>
+                        <small class="d-block mt-2">このパスワードをユーザーに通知してください。</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-user">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- モーダル -->
     <!-- 部署作成/編集モーダル -->
     <div class="modal fade" id="department-modal" tabindex="-1" aria-hidden="true">
@@ -542,6 +684,7 @@
     <script src="js/projects.js"></script>
     <script src="js/departments.js"></script>
     <script src="js/editor.js"></script>
+    <script src="js/users.js"></script>
     <script src="js/main.js"></script>
 </body>
 

@@ -8,6 +8,7 @@ require_once 'Project.php';
 require_once 'Media.php';
 require_once 'Element.php';
 require_once 'Department.php';
+require_once 'UserManager.php';
 
 // CORSヘッダー設定
 header('Access-Control-Allow-Origin: *');
@@ -271,6 +272,44 @@ try {
                     echo '</body></html>';
                     exit;
                 }
+            } else {
+                throw new Exception('不正なリクエストです。');
+            }
+            break;
+
+        // api.php の switch文内に以下のケースを追加
+
+        case 'users':
+            $userManager = new UserManager($db);
+
+            // 管理者のみアクセス可能なエンドポイント
+            if (!$auth->isAdmin($userId)) {
+                http_response_code(403);
+                echo json_encode(['error' => '管理者のみがアクセスできます。']);
+                exit();
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                if ($resourceId) {
+                    // 特定のユーザー情報を取得
+                    $result = $userManager->getUser($resourceId);
+                } else {
+                    // ユーザー一覧を取得
+                    $result = $userManager->getAllUsers();
+                }
+                echo json_encode($result);
+            } else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // 新規ユーザー作成
+                $result = $userManager->createUser($data);
+                echo json_encode($result);
+            } else if ($_SERVER['REQUEST_METHOD'] === 'PUT' && $resourceId) {
+                // ユーザー情報更新
+                $result = $userManager->updateUser($resourceId, $data);
+                echo json_encode($result);
+            } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE' && $resourceId) {
+                // ユーザー削除
+                $result = $userManager->deleteUser($resourceId);
+                echo json_encode($result);
             } else {
                 throw new Exception('不正なリクエストです。');
             }

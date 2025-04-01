@@ -119,8 +119,8 @@ const Auth = (function () {
     }
 
     /**
-     * ユーザー情報を画面に表示
-     */
+    * ユーザー情報を画面に表示
+    */
     function updateUserInfo() {
         if (currentUser) {
             // ユーザー名を表示
@@ -139,6 +139,9 @@ const Auth = (function () {
             } else {
                 adminElements.forEach(el => el.style.display = 'none');
             }
+
+            // 認証状態変更イベントを発火
+            window.dispatchEvent(new Event('auth-state-changed'));
         }
     }
 

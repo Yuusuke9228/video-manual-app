@@ -62,6 +62,7 @@ const Editor = (function () {
         selectedElementId = null;
         document.getElementById('btn-delete-element').disabled = true;
         document.getElementById('element-properties').style.display = 'none';
+        document.getElementById('users-container').style.display = 'none';
     }
 
     /**

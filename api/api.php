@@ -35,7 +35,16 @@ $db = Database::getInstance();
 
 // 認証チェック (ログイン以外のエンドポイントでは認証必須)
 $auth = new Auth($db);
-if ($resourceType !== 'login' && $resourceType !== 'register') {
+
+// 認証が不要なエンドポイント
+$skipAuth = in_array($resourceType, ['login', 'register', 'share', 'download']);
+
+// 共有キーが指定されている場合も認証をスキップ
+if (isset($_GET['shared_key']) && !empty($_GET['shared_key'])) {
+    $skipAuth = true;
+}
+
+if (!$skipAuth) {
     $token = getBearerToken();
     if (!$token || !$auth->validateToken($token)) {
         http_response_code(401);
@@ -45,6 +54,9 @@ if ($resourceType !== 'login' && $resourceType !== 'register') {
 
     // ユーザーIDを取得
     $userId = $auth->getUserIdFromToken($token);
+} else {
+    // 認証不要の場合、デフォルトユーザーID（通常は管理者）を設定
+    $userId = 1; // 管理者ユーザーのID
 }
 
 // エンドポイント処理
@@ -213,6 +225,52 @@ try {
             } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE' && $resourceId) {
                 $result = $element->deleteElement($resourceId, $userId);
                 echo json_encode($result);
+            } else {
+                throw new Exception('不正なリクエストです。');
+            }
+            break;
+
+        case 'share':
+            $project = new Project($db);
+
+            if ($_SERVER['REQUEST_METHOD'] === 'GET' && $resourceId) {
+                // 共有リンクを使用して閲覧（認証なしでアクセス可能）
+                $result = $project->getSharedProject($resourceId);
+                echo json_encode($result);
+            } else if ($_SERVER['REQUEST_METHOD'] === 'POST' && $resourceId) {
+                // 共有リンクを生成
+                $result = $project->generateShareLink($resourceId, $userId);
+                echo json_encode($result);
+            } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE' && $resourceId) {
+                // 共有リンクを削除
+                $result = $project->removeShareLink($resourceId, $userId);
+                echo json_encode($result);
+            } else {
+                throw new Exception('不正なリクエストです。');
+            }
+            break;
+
+        case 'download':
+            $project = new Project($db);
+
+            if ($_SERVER['REQUEST_METHOD'] === 'GET' && $resourceId) {
+                // 共有キーが指定されているか確認
+                $sharedKey = isset($_GET['shared_key']) ? $_GET['shared_key'] : null;
+
+                try {
+                    // プロジェクトをZIPファイルとしてダウンロード
+                    $project->downloadProjectAsZip($resourceId, $sharedKey);
+                    exit; // ZIPダウンロード後に終了
+                } catch (Exception $e) {
+                    // HTML形式でエラーを表示
+                    header('Content-Type: text/html; charset=utf-8');
+                    echo '<!DOCTYPE html><html><head><title>エラー</title></head><body>';
+                    echo '<h1>ダウンロードエラー</h1>';
+                    echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
+                    echo '<p><a href="javascript:history.back()">戻る</a></p>';
+                    echo '</body></html>';
+                    exit;
+                }
             } else {
                 throw new Exception('不正なリクエストです。');
             }

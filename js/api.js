@@ -4,7 +4,7 @@
 const API = (function () {
     // APIのベースURL（サーバー環境に合わせて変更）
     // const BASE_URL = '/api'; // 元のURL
-    const BASE_URL = '/video-manual-app/api/api.php'; // 修正後のURL - api.phpに直接アクセス
+    const BASE_URL = '/video-manual-app/api/api.php'; 
 
     // 認証トークン
     let token = null;
@@ -162,11 +162,18 @@ const API = (function () {
         token = null;
     }
 
+
+    // API拡張 - ベースURLを取得するメソッド
+    function getBaseUrl() {
+        return BASE_URL;
+    }
+
     // 公開API
     return {
         call,
         uploadFile,
         setToken,
-        clearToken
+        clearToken,
+        getBaseUrl
     };
 })();

@@ -226,8 +226,8 @@ const Projects = (function () {
     }
 
     /**
-     * プロジェクトエディタを開く
-     */
+    * プロジェクトエディタを開く
+    */
     async function openProjectEditor(projectId = null) {
         // 画面表示を切り替え
         document.getElementById('projects-container').style.display = 'none';
@@ -235,6 +235,9 @@ const Projects = (function () {
 
         // 部署リストを読み込む
         await loadDepartmentsForProject();
+
+        // 共有カードを初期状態では非表示
+        document.getElementById('share-options-card').style.display = 'none';
 
         if (projectId) {
             // 既存プロジェクトを編集
@@ -247,6 +250,9 @@ const Projects = (function () {
                 document.getElementById('editor-container').style.display = 'block';
                 document.getElementById('media-upload-card').style.display = 'block';
                 document.getElementById('btn-delete-project').style.display = 'block';
+
+                // 共有状態を確認して表示
+                await checkShareStatus();
 
                 // エディタ初期化
                 Editor.init(project);
@@ -369,17 +375,20 @@ const Projects = (function () {
             if (currentProjectId) {
                 // 既存プロジェクト更新
                 response = await API.call(`projects/${currentProjectId}`, 'PUT', formData);
-                alert('プロジェクトを更新しました。');
+                showToast('プロジェクトを更新しました');
             } else {
                 // 新規プロジェクト作成
                 response = await API.call('projects', 'POST', formData);
                 currentProjectId = response.id;
-                alert('プロジェクトを作成しました。');
+                showToast('プロジェクトを作成しました');
 
                 // エディターを表示
                 document.getElementById('editor-container').style.display = 'block';
                 document.getElementById('media-upload-card').style.display = 'block';
                 document.getElementById('btn-delete-project').style.display = 'block';
+
+                // 共有オプションを表示
+                document.getElementById('share-options-card').style.display = 'block';
 
                 // エディタ初期化
                 const project = await API.call(`projects/${currentProjectId}`);
@@ -409,6 +418,212 @@ const Projects = (function () {
             console.error('プロジェクト削除エラー:', error);
             alert('プロジェクトの削除に失敗しました: ' + error.message);
         }
+    }
+
+    /**
+ * 共有リンク表示を更新
+ */
+    async function checkShareStatus() {
+        try {
+            // 既存の共有リンクがあるか確認
+            const project = await API.call(`projects/${currentProjectId}`);
+            const shareCard = document.getElementById('share-options-card');
+            const shareLinkContainer = document.getElementById('share-link-container');
+            const generateButton = document.getElementById('btn-generate-share');
+
+            shareCard.style.display = 'block';
+
+            if (project.share_info) {
+                // 共有情報があれば表示
+                shareLinkContainer.style.display = 'block';
+                document.getElementById('share-link').value = project.share_info.share_url;
+                document.getElementById('share-link-expiry').textContent = `有効期限: ${formatDate(project.share_info.expiry_date)}`;
+                generateButton.style.display = 'none';
+            } else {
+                // 共有情報がなければ非表示
+                shareLinkContainer.style.display = 'none';
+                generateButton.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('共有情報取得エラー:', error);
+        }
+    }
+
+    /**
+     * 日付のフォーマット
+     */
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /**
+     * 共有リンクを生成
+     */
+    async function generateShareLink() {
+        if (!currentProjectId) return;
+
+        try {
+            const response = await API.call(`share/${currentProjectId}`, 'POST');
+
+            // 共有リンク表示を更新
+            document.getElementById('share-link-container').style.display = 'block';
+            document.getElementById('share-link').value = response.share_url;
+            document.getElementById('share-link-expiry').textContent = `有効期限: ${formatDate(response.expiry_date)}`;
+            document.getElementById('btn-generate-share').style.display = 'none';
+
+            // 成功メッセージ
+            showToast('共有リンクを生成しました');
+        } catch (error) {
+            console.error('共有リンク生成エラー:', error);
+            alert('共有リンクの生成に失敗しました: ' + error.message);
+        }
+    }
+
+    /**
+     * 共有リンクをコピー
+     */
+    function copyShareLink() {
+        const shareLink = document.getElementById('share-link');
+        shareLink.select();
+        document.execCommand('copy');
+
+        // コピー成功メッセージ
+        showToast('共有リンクをコピーしました');
+    }
+
+    /**
+     * 共有を停止
+     */
+    async function removeShareLink() {
+        if (!currentProjectId) return;
+
+        if (!confirm('共有リンクを削除すると、このリンクを持っている人はアクセスできなくなります。よろしいですか？')) {
+            return;
+        }
+
+        try {
+            await API.call(`share/${currentProjectId}`, 'DELETE');
+
+            // 共有リンク表示を更新
+            document.getElementById('share-link-container').style.display = 'none';
+            document.getElementById('btn-generate-share').style.display = 'block';
+
+            // 成功メッセージ
+            showToast('共有を停止しました');
+        } catch (error) {
+            console.error('共有リンク削除エラー:', error);
+            alert('共有リンクの削除に失敗しました: ' + error.message);
+        }
+    }
+
+    /**
+     * HTMLとしてダウンロード
+     */
+    function downloadAsHTML() {
+        if (!currentProjectId) return;
+
+        // 認証問題を回避するために共有キーを取得して渡す
+        let sharedKey = '';
+        const shareLink = document.getElementById('share-link');
+
+        if (shareLink && shareLink.value) {
+            // 共有リンクからキーを抽出
+            const urlParts = shareLink.value.split('/');
+            sharedKey = urlParts[urlParts.length - 1];
+        }
+
+        // ダウンロードURLを生成してリダイレクト
+        let downloadUrl = `${API.getBaseUrl()}?type=download&id=${currentProjectId}`;
+
+        // 共有キーがあれば追加
+        if (sharedKey) {
+            downloadUrl += `&shared_key=${sharedKey}`;
+        } else {
+            // 共有キーがない場合は、一時的な共有キーを生成
+            // これは理想的な方法ではないが、一時的な対応として
+            generateTempShareKeyAndDownload(currentProjectId);
+            return;
+        }
+
+        window.open(downloadUrl, '_blank');
+    }
+
+    /**
+     * 一時的な共有キーを生成してダウンロード
+     */
+    async function generateTempShareKeyAndDownload(projectId) {
+        try {
+            // 共有キーを生成
+            const response = await API.call(`share/${projectId}`, 'POST');
+
+            // 生成された共有キーでダウンロード
+            const downloadUrl = `${API.getBaseUrl()}?type=download&id=${projectId}&shared_key=${response.share_key}`;
+            window.open(downloadUrl, '_blank');
+        } catch (error) {
+            console.error('共有キー生成エラー:', error);
+            alert('ダウンロードの準備中にエラーが発生しました: ' + error.message);
+        }
+    }
+
+    /**
+     * トースト通知を表示
+     */
+    function showToast(message) {
+        // Bootstrap 5 トースト表示用のコード
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            // トーストコンテナがなければ作成
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '5';
+            document.body.appendChild(container);
+        }
+
+        const id = 'toast-' + Date.now();
+        const toastHtml = `
+        <div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">通知</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+
+        document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(id);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+
+        // 一定時間後に要素を削除
+        setTimeout(() => {
+            toastElement.remove();
+        }, 3500);
+    }
+
+    // イベントリスナー登録 (openProjectEditor 関数の後ろに追加するコード)
+    function setupShareEventListeners() {
+        // 共有リンク生成ボタン
+        document.getElementById('btn-generate-share').addEventListener('click', generateShareLink);
+
+        // 共有リンクコピーボタン
+        document.getElementById('btn-copy-link').addEventListener('click', copyShareLink);
+
+        // 共有停止ボタン
+        document.getElementById('btn-remove-share').addEventListener('click', removeShareLink);
+
+        // HTMLダウンロードボタン
+        document.getElementById('btn-download-html').addEventListener('click', downloadAsHTML);
     }
 
     /**
@@ -468,6 +683,34 @@ const Projects = (function () {
             document.getElementById('departments-container').style.display = 'none';
             document.getElementById('project-editor-container').style.display = 'none';
             loadProjects();
+        });
+
+        // 共有リンク生成ボタン
+        document.getElementById('btn-generate-share').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log('共有リンク生成ボタンがクリックされました');
+            generateShareLink();
+        });
+
+        // 共有リンクコピーボタン
+        document.getElementById('btn-copy-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log('リンクコピーボタンがクリックされました');
+            copyShareLink();
+        });
+
+        // 共有停止ボタン
+        document.getElementById('btn-remove-share').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log('共有停止ボタンがクリックされました');
+            removeShareLink();
+        });
+
+        // HTMLダウンロードボタン
+        document.getElementById('btn-download-html').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log('HTMLダウンロードボタンがクリックされました');
+            downloadAsHTML();
         });
 
         // フィルター関連イベントリスナー

@@ -268,6 +268,35 @@
                         </div>
                     </div>
 
+                    <div class="card mb-4" id="share-options-card" style="display: none;">
+                        <div class="card-header">共有オプション</div>
+                        <div class="card-body">
+                            <div class="mb-3" id="share-link-container" style="display: none;">
+                                <label class="form-label">共有リンク</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="share-link" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" id="btn-copy-link">
+                                        <i class="fas fa-copy"></i> コピー
+                                    </button>
+                                    <button class="btn btn-outline-danger" type="button" id="btn-remove-share">
+                                        <i class="fas fa-times"></i> 共有停止
+                                    </button>
+                                </div>
+                                <div class="form-text" id="share-link-expiry"></div>
+                            </div>
+                    
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" type="button" id="btn-generate-share">
+                                    <i class="fas fa-share-alt"></i> 共有リンク生成
+                                </button>
+                    
+                                <button class="btn btn-primary" type="button" id="btn-download-html">
+                                    <i class="fas fa-download"></i> HTMLでダウンロード
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- メディアアップロードフォーム -->
                     <div class="card mb-4" id="media-upload-card" style="display: none;">
                         <div class="card-header">メディアアップロード</div>

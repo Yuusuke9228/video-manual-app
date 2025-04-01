@@ -112,6 +112,24 @@ CREATE TABLE IF NOT EXISTS timeline (
     FOREIGN KEY (element_id) REFERENCES elements(id) ON DELETE CASCADE
 );
 
+-- 共有リンク管理テーブル
+CREATE TABLE IF NOT EXISTS project_shares (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    share_key VARCHAR(64) NOT NULL UNIQUE,
+    created_by INT NOT NULL,
+    expiry_date DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- インデックス追加
+CREATE INDEX idx_project_shares_key ON project_shares(share_key);
+
+CREATE INDEX idx_project_shares_project ON project_shares(project_id);
+
 -- サンプルデータの挿入
 INSERT INTO
     departments (name, description)

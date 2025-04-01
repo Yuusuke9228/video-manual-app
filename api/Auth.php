@@ -97,8 +97,8 @@ class Auth {
         $header = base64_encode($header);
         
         $issuedAt = time();
-        $expirationTime = $issuedAt + 3600; // 1時間の有効期限
-        
+        $expirationTime = $issuedAt + (24 * 3600); // 24時間 = 1日
+
         $payload = json_encode([
             'user_id' => $userId,
             'iat' => $issuedAt,

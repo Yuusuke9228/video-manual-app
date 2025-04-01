@@ -145,6 +145,9 @@ const Projects = (function () {
                         </div>
                     </div>
                     <div class="card-footer text-end">
+                        <a href="view.html?id=${project.id}" class="btn btn-info btn-sm">
+                            <i class="fas fa-eye"></i> 閲覧
+                        </a>
                         <button class="btn btn-primary btn-sm edit-project" data-id="${project.id}">
                             <i class="fas fa-edit"></i> 編集
                         </button>
@@ -281,6 +284,12 @@ const Projects = (function () {
         document.getElementById('project-editor-title').textContent = `プロジェクト編集: ${project.title}`;
         document.getElementById('project-title').value = project.title;
         document.getElementById('project-description').value = project.description || '';
+
+        // 詳細説明がある場合はフォームにセット
+        if (document.getElementById('project-detailed-description')) {
+            document.getElementById('project-detailed-description').value = project.detailed_description || '';
+        }
+
         document.getElementById('project-status').value = project.status;
 
         // 部署と作業タイプの選択
@@ -355,6 +364,7 @@ const Projects = (function () {
      * プロジェクトを保存
      */
     async function saveProject() {
+        // フォームデータの取得
         const formData = {
             title: document.getElementById('project-title').value,
             description: document.getElementById('project-description').value,
@@ -362,6 +372,11 @@ const Projects = (function () {
             task_type_id: document.getElementById('project-task').value || null,
             status: document.getElementById('project-status').value
         };
+
+        // 詳細説明フィールドがある場合は追加
+        if (document.getElementById('project-detailed-description')) {
+            formData.detailed_description = document.getElementById('project-detailed-description').value || '';
+        }
 
         // バリデーション
         if (!formData.title) {
@@ -386,8 +401,6 @@ const Projects = (function () {
                 document.getElementById('editor-container').style.display = 'block';
                 document.getElementById('media-upload-card').style.display = 'block';
                 document.getElementById('btn-delete-project').style.display = 'block';
-
-                // 共有オプションを表示
                 document.getElementById('share-options-card').style.display = 'block';
 
                 // エディタ初期化

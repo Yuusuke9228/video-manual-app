@@ -303,7 +303,7 @@ class Project
 
             // 共有URL生成
             // $shareUrl = APP_URL . '/share.html?key=' . $shareKey;
-            $shareUrl = rtrim(APP_URL, '/') . '/view-shared.php?key=' . $shareKey;
+            $shareUrl = APP_URL . '/view.html?id=' . $projectId . '&key=' . $shareKey;
 
             $response = [
                 'share_key' => $shareKey,

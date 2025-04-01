@@ -130,6 +130,14 @@ CREATE INDEX idx_project_shares_key ON project_shares(share_key);
 
 CREATE INDEX idx_project_shares_project ON project_shares(project_id);
 
+-- projects テーブルに説明テキスト用のフィールドを追加
+ALTER TABLE
+    projects
+ADD
+    COLUMN detailed_description TEXT
+AFTER
+    description;
+
 -- サンプルデータの挿入
 INSERT INTO
     departments (name, description)

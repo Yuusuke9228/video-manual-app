@@ -367,6 +367,72 @@ body {
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
 }
 
+/* 矢印方向ボタン */
+#arrow-direction-control .btn-group {
+  display: flex;
+}
+
+#arrow-direction-control .btn {
+  flex: 1;
+}
+
+/* 透明度スライダー */
+#fill-opacity-control .form-range {
+  width: calc(100% - 50px);
+}
+
+#opacity-value {
+  width: 45px;
+  text-align: right;
+}
+
+/* タイムライントラックの調整 */
+.timeline-track {
+  height: 36px;
+  margin-bottom: 4px;
+  position: relative;
+  background-color: #f1f3f5;
+  border-radius: 4px;
+}
+
+.timeline-item {
+  z-index: 2;
+}
+
+/* タイムライン要素タイプ別の色 */
+.timeline-item.text {
+  background-color: #198754;
+}
+
+.timeline-item.rectangle {
+  background-color: #dc3545;
+}
+
+.timeline-item.circle {
+  background-color: #fd7e14;
+}
+
+.timeline-item.arrow {
+  background-color: #6f42c1;
+}
+
+/* エレメントのスタイリング */
+.element.arrow {
+  transform-origin: center left;
+}
+
+.element.arrow:after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 10px solid currentColor;
+}
+
 /* プロジェクト一覧アニメーション */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

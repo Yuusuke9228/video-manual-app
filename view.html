@@ -138,6 +138,50 @@
             gap: 0.5rem;
         }
 
+          /* 要素の基本スタイル */
+  .element {
+    position: absolute;
+    pointer-events: none;
+  }
+  
+  /* テキスト要素 */
+  .element.text {
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 5px;
+    border-radius: 3px;
+  }
+  
+  /* 四角形要素 */
+  .element.rectangle {
+    background-color: rgba(0, 123, 255, 0.5);
+  }
+  
+  /* 円形要素 */
+  .element.circle {
+    background-color: rgba(220, 53, 69, 0.5);
+    border-radius: 50%;
+  }
+  
+  /* 矢印要素 */
+  .element.arrow {
+    height: 2px !important;
+    background-color: #dc3545;
+    transform-origin: left center;
+  }
+  
+  .element.arrow:after,
+  .arrow-head {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 8px solid currentColor;
+  }
+
         @media (max-width: 768px) {
             .project-header {
                 flex-direction: column;
@@ -412,79 +456,89 @@
             }
         }
 
-        // 要素表示
-        function displayElements(elements) {
-            if (!elements || elements.length === 0) return;
+ // 要素表示関数を修正
+    function displayElements(elements) {
+        if (!elements || elements.length === 0) return;
 
-            const container = document.getElementById('elements-container');
-            container.innerHTML = '';
+        const container = document.getElementById('elements-container');
+        container.innerHTML = '';
 
-            elements.forEach(element => {
-                const elementDiv = document.createElement('div');
-                elementDiv.className = `element ${element.element_type}`;
-                elementDiv.dataset.id = element.id;
-                elementDiv.dataset.startTime = element.start_time || 0;
-                elementDiv.dataset.endTime = element.end_time || 10;
+        elements.forEach(element => {
+            const elementDiv = document.createElement('div');
+            elementDiv.className = `element ${element.element_type}`;
+            elementDiv.dataset.id = element.id;
+            elementDiv.dataset.startTime = element.start_time || 0;
+            elementDiv.dataset.endTime = element.end_time || 10;
 
-                // 位置とサイズを設定
-                elementDiv.style.left = `${element.position_x}%`;
-                elementDiv.style.top = `${element.position_y}%`;
-                elementDiv.style.width = `${element.width}px`;
-                elementDiv.style.height = `${element.height}px`;
+            // 位置とサイズを設定
+            elementDiv.style.left = `${element.position_x}%`;
+            elementDiv.style.top = `${element.position_y}%`;
+            elementDiv.style.width = `${element.width}px`;
+            elementDiv.style.height = `${element.height}px`;
 
-                // 回転を設定
-                if (element.rotation) {
-                    elementDiv.style.transform = `rotate(${element.rotation}deg)`;
-                }
+            // 回転を設定
+            if (element.rotation) {
+                elementDiv.style.transform = `rotate(${element.rotation}deg)`;
+            }
 
-                // 要素タイプに応じたスタイルを設定
-                switch (element.element_type) {
-                    case 'text':
-                        elementDiv.textContent = element.content || 'テキスト';
-                        elementDiv.style.color = element.color || '#000000';
-                        elementDiv.style.backgroundColor = element.background || 'transparent';
-                        elementDiv.style.fontSize = `${element.font_size || 16}px`;
-                        elementDiv.style.fontFamily = element.font_family || 'sans-serif';
-                        break;
+            // 塗りつぶし透明度を取得（デフォルトは1）
+            const fillOpacity = element.fill_opacity !== undefined ? element.fill_opacity : 1;
 
-                    case 'rectangle':
-                        elementDiv.style.backgroundColor = element.background || 'rgba(0, 123, 255, 0.5)';
-                        if (element.border_width) {
-                            elementDiv.style.borderWidth = `${element.border_width}px`;
-                            elementDiv.style.borderColor = element.border_color || 'transparent';
-                        }
-                        break;
+            // 要素タイプに応じたスタイルを設定
+            switch (element.element_type) {
+                case 'text':
+                    elementDiv.textContent = element.content || 'テキスト';
+                    elementDiv.style.color = element.color || '#000000';
+                    elementDiv.style.backgroundColor = element.background || 'transparent';
+                    elementDiv.style.fontSize = `${element.font_size || 16}px`;
+                    elementDiv.style.fontFamily = element.font_family || 'sans-serif';
+                    break;
 
-                    case 'circle':
-                        elementDiv.style.backgroundColor = element.background || 'rgba(220, 53, 69, 0.5)';
-                        elementDiv.style.borderRadius = '50%';
-                        if (element.border_width) {
-                            elementDiv.style.borderWidth = `${element.border_width}px`;
-                            elementDiv.style.borderColor = element.border_color || 'transparent';
-                        }
-                        break;
+                case 'rectangle':
+                    if (fillOpacity === 0) {
+                        // 塗りつぶしなし
+                        elementDiv.style.backgroundColor = 'transparent';
+                        elementDiv.style.border = '2px solid rgba(0,123,255,0.8)';
+                    } else {
+                        // 塗りつぶしあり
+                        elementDiv.style.backgroundColor = element.background || `rgba(0,123,255,${fillOpacity})`;
+                    }
+                    break;
 
-                    case 'arrow':
-                        elementDiv.style.backgroundColor = element.color || '#dc3545';
-                        elementDiv.style.height = `${element.height || 2}px`;
+                case 'circle':
+                    if (fillOpacity === 0) {
+                        // 塗りつぶしなし
+                        elementDiv.style.backgroundColor = 'transparent';
+                        elementDiv.style.border = '2px solid rgba(220,53,69,0.8)';
+                    } else {
+                        // 塗りつぶしあり
+                        elementDiv.style.backgroundColor = element.background || `rgba(220,53,69,${fillOpacity})`;
+                    }
+                    // 円形要素のスタイル
+                    elementDiv.style.borderRadius = '50%';
+                    break;
 
-                        // 矢印の先端部分
-                        const arrowHead = document.createElement('div');
-                        arrowHead.className = 'arrow-head';
-                        arrowHead.style.borderColor = `transparent transparent transparent ${element.color || '#dc3545'}`;
-                        elementDiv.appendChild(arrowHead);
-                        break;
-                }
+                case 'arrow':
+                    elementDiv.style.backgroundColor = element.color || '#dc3545';
+                    elementDiv.style.height = `${element.height || 2}px`;
 
-                // 初期状態では非表示（タイミングに合わせて表示）
-                elementDiv.style.display = 'none';
+                    // 矢印の先端部分
+                    const arrowHead = document.createElement('div');
+                    arrowHead.className = 'arrow-head';
+                    arrowHead.style.borderColor = `transparent transparent transparent ${element.color || '#dc3545'}`;
+                    elementDiv.appendChild(arrowHead);
+                    break;
+            }
 
-                container.appendChild(elementDiv);
-            });
+            // 初期状態では非表示（タイミングに合わせて表示）
+            elementDiv.style.display = 'none';
 
-            // 初期表示を更新
-            updateElementsVisibility();
-        }
+            container.appendChild(elementDiv);
+        });
+
+        // 初期表示を更新
+        updateElementsVisibility();
+    }
 
         // 現在の時間に基づいて要素の表示/非表示を更新
         function updateElementsVisibility() {

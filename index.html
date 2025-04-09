@@ -414,6 +414,20 @@
                                                     <label for="element-background" class="form-label">背景色</label>
                                                     <input type="color" class="form-control" id="element-background">
                                                 </div>
+                                                <div class="mb-2" id="fill-opacity-control">
+                                                    <label for="element-fill-opacity" class="form-label">塗りつぶし透明度</label>
+                                                    <div class="d-flex align-items-center">
+                                                        <input type="range" class="form-range flex-grow-1 me-2" id="element-fill-opacity" min="0" max="1" step="0.1"
+                                                            value="1">
+                                                        <span id="opacity-value">100%</span>
+                                                    </div>
+                                                    <div class="form-check mt-1">
+                                                        <input class="form-check-input" type="checkbox" id="element-no-fill">
+                                                        <label class="form-check-label" for="element-no-fill">
+                                                            塗りつぶしなし
+                                                        </label>
+                                                    </div>
+                                                </div>
                                                 <div class="mb-2">
                                                     <label for="element-font-size" class="form-label">フォントサイズ</label>
                                                     <input type="number" class="form-control" id="element-font-size"
@@ -430,6 +444,23 @@
                                                     <label for="element-height" class="form-label">高さ</label>
                                                     <input type="number" class="form-control" id="element-height"
                                                         min="1">
+                                                </div>
+                                                <div class="mb-2" id="arrow-direction-control" style="display: none;">
+                                                    <label class="form-label">矢印の方向</label>
+                                                    <div class="btn-group w-100" role="group">
+                                                        <button type="button" class="btn btn-outline-secondary" id="arrow-direction-left">
+                                                            <i class="fas fa-arrow-left"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary" id="arrow-direction-right">
+                                                            <i class="fas fa-arrow-right"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary" id="arrow-direction-up">
+                                                            <i class="fas fa-arrow-up"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary" id="arrow-direction-down">
+                                                            <i class="fas fa-arrow-down"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <label for="element-start-time" class="form-label">開始時間 (秒)</label>

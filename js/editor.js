@@ -161,30 +161,103 @@ const Editor = (function () {
         });
 
         // 要素トラック
-        const elementsTrack = document.createElement('div');
-        elementsTrack.className = 'timeline-track';
-        elementsTrack.innerHTML = '<div class="timeline-track-label">要素</div>';
-        elementsTrack.style.width = `${maxEndTime * TIMELINE_SECOND_WIDTH + 80}px`;
-        tracksContainer.appendChild(elementsTrack);
+        // const elementsTrack = document.createElement('div');
+        // elementsTrack.className = 'timeline-track';
+        // elementsTrack.innerHTML = '<div class="timeline-track-label">要素</div>';
+        // elementsTrack.style.width = `${maxEndTime * TIMELINE_SECOND_WIDTH + 80}px`;
+        // tracksContainer.appendChild(elementsTrack);
 
-        // 要素アイテムの表示
-        elementsList.forEach(element => {
+        // // 要素アイテムの表示
+        // elementsList.forEach(element => {
+        //     const startTime = element.start_time || 0;
+        //     const endTime = element.end_time || 10;
+
+        //     const item = document.createElement('div');
+        //     item.className = `timeline-item ${element.element_type}`;
+        //     item.dataset.id = element.id;
+        //     item.dataset.type = 'element';
+        //     item.textContent = getElementName(element);
+        //     item.style.left = `${startTime * TIMELINE_SECOND_WIDTH + 80}px`;
+        //     item.style.width = `${(endTime - startTime) * TIMELINE_SECOND_WIDTH}px`;
+
+        //     elementsTrack.appendChild(item);
+
+        //     // クリックイベント
+        //     item.addEventListener('click', () => {
+        //         selectElement(element.id);
+        //     });
+        // });
+        const elementTracks = [];
+
+        // 要素を開始時間でソート
+        const sortedElements = [...elementsList].sort((a, b) =>
+            (a.start_time || 0) - (b.start_time || 0));
+
+        sortedElements.forEach(element => {
             const startTime = element.start_time || 0;
             const endTime = element.end_time || 10;
 
-            const item = document.createElement('div');
-            item.className = `timeline-item ${element.element_type}`;
-            item.dataset.id = element.id;
-            item.dataset.type = 'element';
-            item.textContent = getElementName(element);
-            item.style.left = `${startTime * TIMELINE_SECOND_WIDTH + 80}px`;
-            item.style.width = `${(endTime - startTime) * TIMELINE_SECOND_WIDTH}px`;
+            // 配置可能なトラックを探す
+            let trackIndex = 0;
+            let trackFound = false;
 
-            elementsTrack.appendChild(item);
+            while (!trackFound && trackIndex < elementTracks.length) {
+                const track = elementTracks[trackIndex];
+                let canPlaceInTrack = true;
 
-            // クリックイベント
-            item.addEventListener('click', () => {
-                selectElement(element.id);
+                // 既存の要素と重なるか確認
+                for (const existingElement of track) {
+                    const existingStart = existingElement.start_time || 0;
+                    const existingEnd = existingElement.end_time || 10;
+
+                    // 時間が重なる場合
+                    if ((startTime <= existingEnd && endTime >= existingStart)) {
+                        canPlaceInTrack = false;
+                        break;
+                    }
+                }
+
+                if (canPlaceInTrack) {
+                    trackFound = true;
+                    track.push(element);
+                } else {
+                    trackIndex++;
+                }
+            }
+
+            // 既存のトラックに入らない場合は新しいトラックを作成
+            if (!trackFound) {
+                elementTracks.push([element]);
+            }
+        });
+
+        // 各トラックに対応するHTML要素を作成
+        elementTracks.forEach((track, trackIndex) => {
+            const trackElement = document.createElement('div');
+            trackElement.className = 'timeline-track';
+            trackElement.innerHTML = `<div class="timeline-track-label">要素 ${trackIndex + 1}</div>`;
+            trackElement.style.width = `${maxEndTime * TIMELINE_SECOND_WIDTH + 80}px`;
+            tracksContainer.appendChild(trackElement);
+
+            // トラック内の要素を表示
+            track.forEach(element => {
+                const startTime = element.start_time || 0;
+                const endTime = element.end_time || 10;
+
+                const item = document.createElement('div');
+                item.className = `timeline-item ${element.element_type}`;
+                item.dataset.id = element.id;
+                item.dataset.type = 'element';
+                item.textContent = getElementName(element);
+                item.style.left = `${startTime * TIMELINE_SECOND_WIDTH + 80}px`;
+                item.style.width = `${(endTime - startTime) * TIMELINE_SECOND_WIDTH}px`;
+
+                trackElement.appendChild(item);
+
+                // クリックイベント
+                item.addEventListener('click', () => {
+                    selectElement(element.id);
+                });
             });
         });
     }
@@ -246,69 +319,61 @@ const Editor = (function () {
         const container = document.getElementById('elements-container');
         container.innerHTML = '';
 
-        console.log('要素表示開始、数量:', elementsList.length);
-
         elementsList.forEach(element => {
-            // 選択中のメディアに対応する要素のみ表示
-            // （TODO: 複数メディア対応の場合は時間に基づいて表示）
-
             const elementDiv = document.createElement('div');
             elementDiv.className = `element ${element.element_type}`;
             elementDiv.dataset.id = element.id;
 
-            // 位置とサイズを設定（デフォルト値を設定して、undefinedを回避）
-            elementDiv.style.left = `${element.position_x !== undefined ? element.position_x : 10}%`;
-            elementDiv.style.top = `${element.position_y !== undefined ? element.position_y : 10}%`;
-            elementDiv.style.width = `${element.width || 100}px`;
-            elementDiv.style.height = `${element.height || 100}px`;
-
-            console.log(`要素表示: id=${element.id}, type=${element.element_type}, x=${elementDiv.style.left}, y=${elementDiv.style.top}`);
+            // 位置とサイズを設定
+            elementDiv.style.left = `${element.position_x}%`;
+            elementDiv.style.top = `${element.position_y}%`;
+            elementDiv.style.width = `${element.width}px`;
+            elementDiv.style.height = `${element.height}px`;
 
             // 回転を設定
             if (element.rotation) {
                 elementDiv.style.transform = `rotate(${element.rotation}deg)`;
             }
 
+            // 透明度を設定（デフォルトは1）
+            const fillOpacity = element.fill_opacity !== undefined ? element.fill_opacity : 1;
+
             // 要素タイプに応じたスタイルを設定
             switch (element.element_type) {
                 case 'text':
                     elementDiv.textContent = element.content || 'テキスト';
                     elementDiv.style.color = element.color || '#000000';
-                    elementDiv.style.backgroundColor = element.background || 'rgba(255,255,255,0.7)';
+                    elementDiv.style.backgroundColor = element.background || 'transparent';
                     elementDiv.style.fontSize = `${element.font_size || 16}px`;
                     elementDiv.style.fontFamily = element.font_family || 'sans-serif';
                     break;
 
                 case 'rectangle':
-                    elementDiv.style.backgroundColor = element.background || 'rgba(0, 123, 255, 0.5)';
-                    elementDiv.style.borderWidth = element.border_width ? `${element.border_width}px` : '0';
-                    elementDiv.style.borderColor = element.border_color || 'transparent';
+                    if (fillOpacity === 0) {
+                        // 塗りつぶしなし
+                        elementDiv.style.backgroundColor = 'transparent';
+                        elementDiv.style.border = '2px solid rgba(0,123,255,0.8)';
+                    } else {
+                        // 塗りつぶしあり
+                        elementDiv.style.backgroundColor = element.background || `rgba(0,123,255,${fillOpacity})`;
+                    }
                     break;
 
                 case 'circle':
-                    elementDiv.style.backgroundColor = element.background || 'rgba(220, 53, 69, 0.5)';
-                    elementDiv.style.borderWidth = element.border_width ? `${element.border_width}px` : '0';
-                    elementDiv.style.borderColor = element.border_color || 'transparent';
+                    if (fillOpacity === 0) {
+                        // 塗りつぶしなし
+                        elementDiv.style.backgroundColor = 'transparent';
+                        elementDiv.style.border = '2px solid rgba(220,53,69,0.8)';
+                    } else {
+                        // 塗りつぶしあり
+                        elementDiv.style.backgroundColor = element.background || `rgba(220,53,69,${fillOpacity})`;
+                    }
                     break;
 
                 case 'arrow':
                     elementDiv.style.backgroundColor = element.color || '#dc3545';
                     elementDiv.style.height = `${element.height || 2}px`;
-                    elementDiv.style.width = `${element.width || 100}px`;
-
-                    // 矢印用の疑似要素をスタイルシートで定義しているため、色を設定
-                    const arrowColor = element.color || '#dc3545';
-                    elementDiv.style.setProperty('--arrow-color', arrowColor);
                     break;
-
-                case 'image':
-                    // TODO: 画像要素の実装
-                    break;
-            }
-
-            // 透明度の設定
-            if (element.opacity) {
-                elementDiv.style.opacity = element.opacity;
             }
 
             // 選択状態の設定
@@ -331,9 +396,6 @@ const Editor = (function () {
                 deselectElement();
             }
         });
-
-        // ドラッグ＆ドロップを再初期化
-        initDragAndDrop();
     }
 
     /**
@@ -343,10 +405,10 @@ const Editor = (function () {
         // 既存の設定をクリア
         interact('.element').unset();
 
-        // interact.jsを使用して要素のドラッグと変形を可能にする
-        interact('.element')
+        // 矢印要素用の特別な処理
+        interact('.element.arrow')
             .draggable({
-                inertia: false, // 慣性をオフに（より正確な位置制御のため）
+                inertia: false,
                 modifiers: [
                     interact.modifiers.restrictRect({
                         restriction: 'parent',
@@ -356,22 +418,76 @@ const Editor = (function () {
                 autoScroll: true,
                 listeners: {
                     start: function (event) {
-                        // ドラッグ開始時のスタイルなど
                         event.target.classList.add('dragging');
-                        console.log('ドラッグ開始:', event.target.dataset.id);
+                        console.log('矢印ドラッグ開始:', event.target.dataset.id);
                     },
                     move: dragMoveListener,
                     end: function (event) {
-                        // ドラッグ終了時のスタイルをリセット
                         event.target.classList.remove('dragging');
-
                         const elementId = event.target.dataset.id;
                         const element = getElementById(elementId);
                         if (element) {
-                            // 位置情報を更新
                             updateElementPosition(elementId, element);
                         }
-                        console.log('ドラッグ終了:', elementId);
+                    }
+                }
+            })
+            // 矢印は幅のみ変更可能（高さは固定）
+            .resizable({
+                edges: { left: false, right: true, bottom: false, top: false },
+                listeners: {
+                    start: function (event) {
+                        event.target.classList.add('resizing');
+                    },
+                    move: function (event) {
+                        // 矢印専用のリサイズ処理
+                        const target = event.target;
+                        let width = parseFloat(target.style.width) || 100;
+                        width += event.deltaRect.width;
+                        target.style.width = `${width}px`;
+                    },
+                    end: function (event) {
+                        event.target.classList.remove('resizing');
+                        const elementId = event.target.dataset.id;
+                        const element = getElementById(elementId);
+                        if (element) {
+                            // 幅のみ更新
+                            const width = parseFloat(event.target.style.width);
+                            API.call(`elements/${elementId}`, 'PUT', { width: width });
+                            element.width = width;
+                        }
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 20 }
+                    })
+                ]
+            });
+
+        // 通常の要素（矢印以外）のドラッグ＆リサイズ
+        interact('.element:not(.arrow)')
+            .draggable({
+                inertia: false,
+                modifiers: [
+                    interact.modifiers.restrictRect({
+                        restriction: 'parent',
+                        endOnly: true
+                    })
+                ],
+                autoScroll: true,
+                listeners: {
+                    start: function (event) {
+                        event.target.classList.add('dragging');
+                    },
+                    move: dragMoveListener,
+                    end: function (event) {
+                        event.target.classList.remove('dragging');
+                        const elementId = event.target.dataset.id;
+                        const element = getElementById(elementId);
+                        if (element) {
+                            updateElementPosition(elementId, element);
+                        }
                     }
                 }
             })
@@ -380,19 +496,15 @@ const Editor = (function () {
                 listeners: {
                     start: function (event) {
                         event.target.classList.add('resizing');
-                        console.log('リサイズ開始:', event.target.dataset.id);
                     },
                     move: resizeMoveListener,
                     end: function (event) {
                         event.target.classList.remove('resizing');
-
                         const elementId = event.target.dataset.id;
                         const element = getElementById(elementId);
                         if (element) {
-                            // サイズ情報を更新
                             updateElementSize(elementId, element);
                         }
-                        console.log('リサイズ終了:', elementId);
                     }
                 },
                 modifiers: [
@@ -606,12 +718,14 @@ const Editor = (function () {
         const colorField = document.getElementById('element-color').parentNode;
         const backgroundField = document.getElementById('element-background').parentNode;
         const fontSizeField = document.getElementById('element-font-size').parentNode;
+        const arrowDirectionControl = document.getElementById('arrow-direction-control');
 
         // デフォルトですべて表示
         contentField.style.display = 'block';
         colorField.style.display = 'block';
         backgroundField.style.display = 'block';
         fontSizeField.style.display = 'block';
+        arrowDirectionControl.style.display = 'block';
 
         // 要素タイプによって非表示にする
         switch (element.element_type) {
@@ -624,6 +738,7 @@ const Editor = (function () {
                 // テキストと文字サイズは非表示
                 contentField.style.display = 'none';
                 fontSizeField.style.display = 'none';
+                arrowDirectionControl.style.display = 'none';
                 break;
 
             case 'arrow':
@@ -633,7 +748,132 @@ const Editor = (function () {
                 fontSizeField.style.display = 'none';
                 break;
         }
+
+        // 矢印方向ボタンのイベントリスナー設定
+        if (element.element_type === 'arrow') {
+            document.getElementById('arrow-direction-left').addEventListener('click', () => setArrowDirection(element, 'left'));
+            document.getElementById('arrow-direction-right').addEventListener('click', () => setArrowDirection(element, 'right'));
+            document.getElementById('arrow-direction-up').addEventListener('click', () => setArrowDirection(element, 'up'));
+            document.getElementById('arrow-direction-down').addEventListener('click', () => setArrowDirection(element, 'down'));
+        }
+        // 透明度コントロールの表示/非表示を切り替え
+        const fillOpacityControl = document.getElementById('fill-opacity-control');
+        fillOpacityControl.style.display =
+            (element.element_type === 'rectangle' || element.element_type === 'circle') ? 'block' : 'none';
+
+        // 透明度の値を設定
+        const opacitySlider = document.getElementById('element-fill-opacity');
+        const opacityValue = document.getElementById('opacity-value');
+        const noFillCheckbox = document.getElementById('element-no-fill');
+
+        // 透明度の初期値を設定
+        const currentOpacity = element.fill_opacity !== undefined ? element.fill_opacity : 1;
+        opacitySlider.value = currentOpacity;
+        opacityValue.textContent = Math.round(currentOpacity * 100) + '%';
+
+        // 塗りつぶしなしの状態を設定
+        noFillCheckbox.checked = currentOpacity === 0;
+
+        // 透明度スライダーのイベントリスナー
+        opacitySlider.addEventListener('input', function () {
+            const opacity = parseFloat(this.value);
+            opacityValue.textContent = Math.round(opacity * 100) + '%';
+            noFillCheckbox.checked = opacity === 0;
+
+            // プレビューを更新
+            updateElementFillOpacity(element, opacity);
+        });
+
+        // 塗りつぶしなしチェックボックスのイベントリスナー
+        noFillCheckbox.addEventListener('change', function () {
+            const opacity = this.checked ? 0 : 1;
+            opacitySlider.value = opacity;
+            opacityValue.textContent = Math.round(opacity * 100) + '%';
+
+            // プレビューを更新
+            updateElementFillOpacity(element, opacity);
+        });
     }
+
+    // 矢印の方向を設定する関数
+    function setArrowDirection(element, direction) {
+        // 矢印の方向に応じて回転角度を設定
+        let rotation = 0;
+        switch (direction) {
+            case 'left':
+                rotation = 180;
+                break;
+            case 'up':
+                rotation = -90;
+                break;
+            case 'down':
+                rotation = 90;
+                break;
+            case 'right':
+            default:
+                rotation = 0;
+        }
+
+        // 要素のスタイルを更新
+        const elementDiv = document.querySelector(`.element[data-id="${element.id}"]`);
+        elementDiv.style.transform = `rotate(${rotation}deg)`;
+
+        // データベースに更新を保存
+        API.call(`elements/${element.id}`, 'PUT', { rotation: rotation });
+
+        // ローカルデータも更新
+        element.rotation = rotation;
+
+        // 選択状態を維持
+        selectElement(element.id);
+    }
+
+    // 透明度を更新する関数
+    function updateElementFillOpacity(element, opacity) {
+        // 要素のスタイルを更新
+        const elementDiv = document.querySelector(`.element[data-id="${element.id}"]`);
+
+        if (opacity === 0) {
+            // 塗りつぶしなしの場合は背景を透明に
+            elementDiv.style.backgroundColor = 'transparent';
+            // ボーダーを追加して形状を維持
+            elementDiv.style.border = element.element_type === 'circle'
+                ? '2px solid rgba(220,53,69,0.8)'
+                : '2px solid rgba(0,123,255,0.8)';
+
+            // 全体の透明度は1に戻す（要素全体を消さない）
+            elementDiv.style.opacity = '1';
+        } else {
+            // 塗りつぶしありの場合
+            const baseColor = element.element_type === 'circle'
+                ? 'rgba(220,53,69,'
+                : 'rgba(0,123,255,';
+
+            // カスタム背景色があればそれを使用
+            let bgColor = element.background;
+            if (!bgColor) {
+                // デフォルト色に透明度を適用
+                bgColor = baseColor + opacity + ')';
+            } else if (bgColor.startsWith('rgba')) {
+                // 既存のrgba色の透明度を更新
+                bgColor = bgColor.replace(/rgba\((.+?),\s*[\d\.]+\)/, `rgba($1, ${opacity})`);
+            } else if (bgColor.startsWith('rgb')) {
+                // rgb色をrgbaに変換
+                bgColor = bgColor.replace(/rgb\((.+?)\)/, `rgba($1, ${opacity})`);
+            } else {
+                // HEX色などの場合、そのまま使用し透明度は別途設定
+                elementDiv.style.opacity = opacity;
+            }
+
+            elementDiv.style.backgroundColor = bgColor;
+            // ボーダーを削除
+            elementDiv.style.border = 'none';
+        }
+
+        // データとして保存
+        element.fill_opacity = opacity;
+    }
+
     /**
      * 要素のプロパティを更新
      */
@@ -654,6 +894,7 @@ const Editor = (function () {
             start_time: parseFloat(document.getElementById('element-start-time').value) || 0,
             end_time: parseFloat(document.getElementById('element-end-time').value) || 10
         };
+        formData.fill_opacity = parseFloat(document.getElementById('element-fill-opacity').value);
 
         try {
             // APIで要素を更新
